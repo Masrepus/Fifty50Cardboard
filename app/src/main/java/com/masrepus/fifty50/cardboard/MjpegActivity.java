@@ -9,6 +9,12 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import com.google.vrtoolkit.cardboard.CardboardActivity;
+import com.google.vrtoolkit.cardboard.CardboardView;
+import com.google.vrtoolkit.cardboard.Eye;
+import com.google.vrtoolkit.cardboard.HeadTransform;
+import com.google.vrtoolkit.cardboard.Viewport;
+import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
 import com.masrepus.fifty50.cardboard.MjpegInputStream;
 import com.masrepus.fifty50.cardboard.MjpegView;
 import android.app.Activity;
@@ -20,10 +26,16 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-public class MjpegActivity extends Activity {
+import javax.microedition.khronos.egl.EGLConfig;
+
+public class MjpegActivity extends CardboardActivity implements CardboardView.StereoRenderer {
     private static final String TAG = "MjpegActivity";
 
     private MjpegView mv;
+    private HeadTransform headTransform;
+    private Direction direction = Direction.STRAIGHT;
+    private Mode mode = Mode.BRAKE;
+    private boolean running;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +50,9 @@ public class MjpegActivity extends Activity {
         mv = new MjpegView(this);
         setContentView(mv);
 
+        running = true;
+
+        new GestureDetector().start();
         new DoRead().execute(URL);
     }
 
@@ -58,6 +73,44 @@ public class MjpegActivity extends Activity {
                     | View.SYSTEM_UI_FLAG_FULLSCREEN
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
+    }
+
+    @Override
+    public void onNewFrame(HeadTransform headTransform) {
+        this.headTransform = headTransform;
+    }
+
+    @Override
+    public void onDrawEye(Eye eye) {
+
+    }
+
+    @Override
+    public void onFinishFrame(Viewport viewport) {
+
+    }
+
+    @Override
+    public void onSurfaceChanged(int i, int i1) {
+
+    }
+
+    @Override
+    public void onSurfaceCreated(EGLConfig eglConfig) {
+
+    }
+
+    @Override
+    public void onRendererShutdown() {
+
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public Mode getMode() {
+        return mode;
     }
 
     public class DoRead extends AsyncTask<String, Void, MjpegInputStream> {
@@ -94,5 +147,75 @@ public class MjpegActivity extends Activity {
             mv.setDisplayMode(MjpegView.SIZE_BEST_FIT);
             mv.showFps(true);
         }
+    }
+
+    public class GestureDetector extends Thread {
+
+        @Override
+        public void run() {
+
+            while (running) {
+
+                //check the current head transform and send the appropriate command
+                if (headTransform != null) {
+
+                    float[] eulerAngles = new float[3];
+                    headTransform.getEulerAngles(eulerAngles, 0);
+
+                    //if roll is right, send "right" command, etc.
+                    if (eulerAngles[2] > 0.17) direction = Direction.RIGHT;
+                    else if (eulerAngles[2] < -0.17) direction = Direction.LEFT;
+                    else direction = Direction.STRAIGHT;
+
+                    //check pitch angle
+                    if (eulerAngles[0] > 0.17) mode = Mode.BACKWARD;
+                    else if (eulerAngles[0] < -0.17) mode = Mode.FORWARD;
+                    else mode = Mode.BRAKE;
+
+                    //now send command
+                    switch (direction) {
+                        case LEFT: left();
+                            break;
+                        case RIGHT: right();
+                            break;
+                        case STRAIGHT: straight();
+                            break;
+                    }
+
+                    switch (mode) {
+                        case FORWARD: forward();
+                            break;
+                        case BACKWARD: backward();
+                            break;
+                        case BRAKE: brake();
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void left() {
+
+    }
+
+    private void right() {
+
+    }
+
+    private void straight() {
+
+    }
+
+    private void forward() {
+
+    }
+
+    private void backward() {
+
+    }
+
+    private void brake() {
+
     }
 }
