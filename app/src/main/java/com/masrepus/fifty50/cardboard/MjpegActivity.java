@@ -62,7 +62,6 @@ public class MjpegActivity extends Activity {
 
     public class DoRead extends AsyncTask<String, Void, MjpegInputStream> {
         protected MjpegInputStream doInBackground(String... url) {
-            //TODO: if camera has authentication deal with it and don't just not work
             HttpResponse res = null;
             DefaultHttpClient httpclient = new DefaultHttpClient();
             Log.d(TAG, "1. Sending http request");

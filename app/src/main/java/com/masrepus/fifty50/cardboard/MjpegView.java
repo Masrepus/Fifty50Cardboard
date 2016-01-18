@@ -114,10 +114,13 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
                         c = mSurfaceHolder.lockCanvas();
                         synchronized (mSurfaceHolder) {
                             try {
-                                bm = mIn.readMjpegFrame();
+                                bm = Bitmap.createScaledBitmap(mIn.readMjpegFrame(), dispWidth/2, dispHeight, false);
                                 destRect = destRect(bm.getWidth(),bm.getHeight());
                                 c.drawColor(Color.BLACK);
-                                c.drawBitmap(bm, null, destRect, p);
+
+                                //draw the image two times for cardboard
+                                c.drawBitmap(bm, 0, 0, p);
+                                c.drawBitmap(bm, dispWidth/2, 0, p);
                                 if(showFps) {
                                     p.setXfermode(mode);
                                     if(ovl != null) {
