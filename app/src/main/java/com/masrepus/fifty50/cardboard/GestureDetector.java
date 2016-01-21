@@ -15,17 +15,17 @@ import java.util.Arrays;
 public class GestureDetector extends Thread {
 
     private static final String TAG = "GestureDetector";
-    private MjpegActivity mjpegActivity;
+    private MainActivity mainActivity;
     private HeadTracker tracker;
     private Car.Direction direction = Car.Direction.STRAIGHT;
     private Car.DrivingMode mode = Car.DrivingMode.BRAKE;
     private ArrayList<String> trackerData = new ArrayList<>();
 
-    public GestureDetector(MjpegActivity mjpegActivity) {
-        this.mjpegActivity = mjpegActivity;
+    public GestureDetector(MainActivity mainActivity) {
+        this.mainActivity = mainActivity;
 
         //init head tracking
-        tracker = HeadTracker.createFromContext(mjpegActivity);
+        tracker = HeadTracker.createFromContext(mainActivity);
         tracker.startTracking();
     }
 
@@ -54,7 +54,7 @@ public class GestureDetector extends Thread {
         FileOutputStream outputStream;
 
         try {
-            outputStream = mjpegActivity.openFileOutput(fnm, Context.MODE_PRIVATE);
+            outputStream = mainActivity.openFileOutput(fnm, Context.MODE_PRIVATE);
 
             for (int i = 0; i < trackerData.size(); i++) {
                 outputStream.write((trackerData.get(i) + "\n").getBytes());
@@ -89,13 +89,13 @@ public class GestureDetector extends Thread {
             //now send command
             switch (direction) {
                 case LEFT:
-                    mjpegActivity.left(Car.Speed.FAST);
+                    mainActivity.left(Car.Speed.FAST);
                     break;
                 case RIGHT:
-                    mjpegActivity.right(Car.Speed.FAST);
+                    mainActivity.right(Car.Speed.FAST);
                     break;
                 case STRAIGHT:
-                    mjpegActivity.straight();
+                    mainActivity.straight();
                     break;
             }
 
@@ -104,13 +104,13 @@ public class GestureDetector extends Thread {
             //send driving mode to car
             switch (mode) {
                 case FORWARD:
-                    mjpegActivity.forward(Car.Speed.SLOW);
+                    mainActivity.forward(Car.Speed.SLOW);
                     break;
                 case BACKWARD:
-                    mjpegActivity.backward(Car.Speed.SLOW);
+                    mainActivity.backward(Car.Speed.SLOW);
                     break;
                 case BRAKE:
-                    mjpegActivity.brake();
+                    mainActivity.brake();
                     break;
             }
 
