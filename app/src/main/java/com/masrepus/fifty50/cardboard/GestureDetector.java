@@ -20,6 +20,7 @@ public class GestureDetector extends Thread {
     private Car.Direction direction = Car.Direction.STRAIGHT;
     private Car.DrivingMode mode = Car.DrivingMode.BRAKE;
     private ArrayList<String> trackerData = new ArrayList<>();
+    private boolean running;
 
     public GestureDetector(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
@@ -70,57 +71,59 @@ public class GestureDetector extends Thread {
     @Override
     public void run() {
 
-        //check the current head transform and send the appropriate command
-        if (tracker != null) {
+        running = true;
 
-            float[] headView = new float[3];
-            tracker.getLastHeadView(headView, 0);
+        while (running) {
+            //check the current head transform and send the appropriate command
+            if (tracker != null) {
 
-            //if looking right/left, send right/left command, etc.
-            if (headView[8] > 0.2) direction = Car.Direction.RIGHT;
-            else if (headView[8] < -0.2) direction = Car.Direction.LEFT;
-            else direction = Car.Direction.STRAIGHT;
+                float[] headView = new float[16];
+                tracker.getLastHeadView(headView, 0);
 
-            //looking up or down?
-            if (headView[9] < -0.2) mode = Car.DrivingMode.BACKWARD;
-            else if (headView[9] > 0.2) mode = Car.DrivingMode.FORWARD;
-            else mode = Car.DrivingMode.BRAKE;
+                //if looking right/left, send right/left command, etc.
+                if (headView[8] > 0.25) direction = Car.Direction.RIGHT;
+                else if (headView[8] < -0.25) direction = Car.Direction.LEFT;
+                else direction = Car.Direction.STRAIGHT;
 
-            //now send command
-            switch (direction) {
-                case LEFT:
-                    mainActivity.left(Car.Speed.FAST);
-                    break;
-                case RIGHT:
-                    mainActivity.right(Car.Speed.FAST);
-                    break;
-                case STRAIGHT:
-                    mainActivity.straight();
-                    break;
+                //looking up or down?
+                if (headView[9] < -0.2) mode = Car.DrivingMode.BACKWARD;
+                else if (headView[9] > 0.2) mode = Car.DrivingMode.FORWARD;
+                else mode = Car.DrivingMode.BRAKE;
+
+                //now send command
+                switch (direction) {
+                    case LEFT:
+                        mainActivity.left(Car.Speed.FAST);
+                        break;
+                    case RIGHT:
+                        mainActivity.right(Car.Speed.FAST);
+                        break;
+                    case STRAIGHT:
+                        mainActivity.straight();
+                        break;
+                }
+
+                Log.d(TAG, "headView[8]=" + headView[8] + " -> " + direction + ", headView[9]=" + headView[9] + " -> " + mode);
+
+                //send driving mode to car
+                switch (mode) {
+                    case FORWARD:
+                        mainActivity.forward(Car.Speed.SLOW);
+                        break;
+                    case BACKWARD:
+                        mainActivity.backward(Car.Speed.SLOW);
+                        break;
+                    case BRAKE:
+                        mainActivity.brake();
+                        break;
+                }
+            } else Log.d(TAG, "tracker == null");
+
+            try {
+                Thread.sleep(100, 0);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-
-            Log.d(TAG, direction.name());
-
-            //send driving mode to car
-            switch (mode) {
-                case FORWARD:
-                    mainActivity.forward(Car.Speed.SLOW);
-                    break;
-                case BACKWARD:
-                    mainActivity.backward(Car.Speed.SLOW);
-                    break;
-                case BRAKE:
-                    mainActivity.brake();
-                    break;
-            }
-
-            Log.d(TAG, mode.name());
-        } else Log.d(TAG, "tracker == null");
-
-        try {
-            Thread.sleep(100, 0);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 }
