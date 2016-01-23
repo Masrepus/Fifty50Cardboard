@@ -34,6 +34,7 @@ public class MainActivity extends CardboardActivity {
     private volatile Car.PinState fwdFast, fwdSlow, bwdFast, bwdSlow, leftFast, leftSlow, rightFast, rightSlow;
     private DataOutputStream out;
     private DataInputStream in;
+    private int camPort;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +45,13 @@ public class MainActivity extends CardboardActivity {
         SharedPreferences pref = getSharedPreferences("prefs", 0);
         server = pref.getString("server", "192.168.42.1");
         port = pref.getInt("port", 50000);
+        camPort = pref.getInt("camPort", 8080);
+
+        //save pref values again
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("server", server).apply();
+        editor.putInt("port", port).apply();
+        editor.putInt("camPort", camPort).apply();
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -58,7 +66,7 @@ public class MainActivity extends CardboardActivity {
 
         //start gesture detection, mjpg streaming and network connection services
         new GestureDetector(this).start();
-        new DoRead().execute(URL);
+        new MjpgReader().execute(URL);
         new Connector(server, port).start();
         new ServerListener().start();
     }
@@ -228,13 +236,13 @@ public class MainActivity extends CardboardActivity {
         }
     }
 
-    public class DoRead extends AsyncTask<String, Void, MjpegInputStream> {
+    public class MjpgReader extends AsyncTask<String, Void, MjpegInputStream> {
         protected MjpegInputStream doInBackground(String... url) {
             HttpResponse res = null;
             DefaultHttpClient httpclient = new DefaultHttpClient();
             Log.i(TAG, "1. Sending http request");
             try {
-                res = httpclient.execute(new HttpGet(new URI("http", null, MainActivity.this.server, 8080, "/", "action=stream", "anchor")));
+                res = httpclient.execute(new HttpGet(new URI("http", null, MainActivity.this.server, camPort, "/", "action=stream", "anchor")));
                 Log.i(TAG, "2. Request finished, status = " + res.getStatusLine().getStatusCode());
                 if (res.getStatusLine().getStatusCode() == 401) {
                     //You must turn off camera User Access Control before this will work

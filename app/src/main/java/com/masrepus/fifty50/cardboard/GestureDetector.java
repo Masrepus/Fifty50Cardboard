@@ -103,7 +103,7 @@ public class GestureDetector extends Thread {
                         break;
                 }
 
-                Log.d(TAG, "headView[8]=" + headView[8] + " -> " + direction + ", headView[9]=" + headView[9] + " -> " + mode);
+                //Log.d(TAG, "headView[8]=" + headView[8] + " -> " + direction + ", headView[9]=" + headView[9] + " -> " + mode);
 
                 //send driving mode to car
                 switch (mode) {
@@ -117,7 +117,7 @@ public class GestureDetector extends Thread {
                         mainActivity.brake();
                         break;
                 }
-            } else Log.d(TAG, "tracker == null");
+            } else Log.e(TAG, "tracker == null");
 
             try {
                 Thread.sleep(100, 0);
